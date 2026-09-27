@@ -23,11 +23,54 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import os
 import secrets
+from pathlib import Path
 
 ALGORITHM = "pbkdf2_sha256"
 ITERATIONS = 600_000
 SALT_BYTES = 16
+
+# --- Session tokens -------------------------------------------------------
+# Identity must be server-verified, not taken from a client-supplied user_id.
+# On login we issue an HMAC-signed token "<user_id>.<sig>"; the signature is over
+# the user_id with a server secret the client never sees, so a client cannot forge
+# a token for another user. Guests simply send no token.
+_SECRET_FILE = Path(__file__).resolve().parent / ".session_secret"
+
+
+def _session_secret() -> bytes:
+    """A stable server secret: SESSION_SECRET env var, else a gitignored file that is
+    generated once on first run (so tokens survive restarts but the secret is never
+    committed)."""
+    env = os.getenv("SESSION_SECRET")
+    if env:
+        return env.encode("utf-8")
+    if _SECRET_FILE.exists():
+        return _SECRET_FILE.read_bytes()
+    secret = secrets.token_bytes(32)
+    _SECRET_FILE.write_bytes(secret)
+    return secret
+
+
+def make_token(user_id: int) -> str:
+    payload = str(user_id)
+    sig = hmac.new(_session_secret(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{sig}"
+
+
+def verify_token(token: str | None) -> int | None:
+    """Return the authenticated user id iff the token's signature is valid, else None."""
+    if not token or "." not in token:
+        return None
+    payload, _, sig = token.partition(".")
+    expected = hmac.new(_session_secret(), payload.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    try:
+        return int(payload)
+    except ValueError:
+        return None
 
 
 def hash_password(password: str) -> str:

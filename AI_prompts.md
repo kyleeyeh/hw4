@@ -353,3 +353,43 @@ result caps, models, how to run front + back).
 > * tools and abilities
 > * safety rules
 > * specs (loop limits, result caps, models, how to run front + back)
+
+---
+
+## Problem 13 — Push to GitHub and Submit the URL
+
+Package the project into an `hw4` layout and push to a public GitHub repo (openable and
+cloneable by graders). Never commit the real `.env`, the database, or product images —
+use `.gitignore` and ship `.env.example` with placeholders. Add a `README.md` explaining
+how to run the front end and back end after placing the local data pack.
+
+### Prompt 1 — the task
+
+> problem 13: push to github and submit the URL
+>
+> okay now it's time to wrap up. put the code in a folder named hw4 and push it to a public github repository. i'm going to be submitting the repo url on canvas as my submission (the link should be openable and cloneable by graders).
+>
+> do not put the real .env, campus_customs.db, or product images in the github repo. use .gitignore. include .env.example with placeholders only.
+>
+> i've attached the expected file layout for the github repo, as well as the local-only data pack (not in git).
+>
+> the agent itself is four files under backend/: prompts/prompt.md, agent.py, tools.py and models.py
+>
+> README.md should explain how to run the front end and back end after placing the data pack.
+
+Result: pushed to **https://github.com/kyleeyeh/hw4** (public). Verified against the remote
+tree that no `.env`, `*.db`, `data/`, product images, or virtualenv are committed.
+
+### Prompt 2 — follow-up: review fixes (Codex findings)
+
+> [Codex flagged: (1) chat history exposed by client-supplied user_id with no auth check;
+> (2) AI_prompts.md missing a Problem 13 section.]
+> since this is a literal homework assignment to make a pretend website, idk how important
+> point 1 is, but to be safe, maybe address it without sacrificing any other requirement.
+> point 2 should probably be addressed just to be safe.
+
+Result: (1) Added server-verified session tokens — login/signup now issue an HMAC-signed
+token; chat and history routes derive identity **only** from the verified token (via the
+`Authorization: Bearer` header), never from a client-supplied id, so a client can't read or
+impersonate another customer. Guests (no token) still chat; history requires a valid token.
+(2) This section added.

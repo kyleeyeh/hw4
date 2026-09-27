@@ -23,7 +23,7 @@ const GREETING: Msg = {
 const HISTORY_WINDOW = 16
 
 export default function ChatWidget() {
-  const { user } = useAuth()
+  const { user, token } = useAuth()
   const { setResults } = useChatResults()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -45,11 +45,11 @@ export default function ChatWidget() {
   // Reload saved history when a shopper logs in; reset to a clean greeting on logout.
   useEffect(() => {
     let cancelled = false
-    if (!user) {
+    if (!user || !token) {
       setMessages([GREETING])
       return
     }
-    fetchChatHistory(user.id)
+    fetchChatHistory(token)
       .then(({ history }) => {
         if (cancelled) return
         const restored: Msg[] = history.map((t) => ({
@@ -65,7 +65,7 @@ export default function ChatWidget() {
     return () => {
       cancelled = true
     }
-  }, [user])
+  }, [user, token])
 
   async function send() {
     const text = input.trim()
@@ -100,10 +100,12 @@ export default function ChatWidget() {
     try {
       const res = await fetch('/api/chat/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           message: text,
-          user_id: user?.id ?? null,
           history,
           page_product_id: pageProductId,
         }),

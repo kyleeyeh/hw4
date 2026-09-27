@@ -26,3 +26,6 @@ dist/
 Thumbs.db
 .vscode/
 .claude/
+
+# Session-signing secret (generated at runtime, never commit)
+backend/.session_secret

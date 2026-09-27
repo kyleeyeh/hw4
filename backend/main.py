@@ -12,12 +12,12 @@ from __future__ import annotations
 import json
 import sqlite3
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 from agent import ChatDeps, ViewingProduct, run_chat, run_chat_stream
-from auth import hash_password, verify_password
+from auth import hash_password, make_token, verify_password, verify_token
 from db import (
     PRODUCTS_DIR,
     create_user,
@@ -100,7 +100,8 @@ def signup(req: SignupRequest) -> dict:
         )
     except sqlite3.IntegrityError:
         raise HTTPException(status_code=409, detail="An account with that email already exists.")
-    return {"user": user}
+    # Issue a signed session token so later requests prove who they are.
+    return {"user": user, "token": make_token(user["id"])}
 
 
 @app.post("/api/login")
@@ -115,16 +116,31 @@ def login(req: LoginRequest) -> dict:
             "first_name": row["first_name"],
             "last_name": row["last_name"],
             "name": row["name"],
-        }
+        },
+        "token": make_token(row["id"]),
     }
 
 
 # ---------------------------------------------------------------- chat agent
 
-def _build_deps(req: ChatRequest):
-    """Identity + page context for a chat request. Returns (deps, user_row|None)."""
+def _authed_user_id(authorization: str | None) -> int | None:
+    """The user id from a verified Bearer token, or None (guest / bad token).
+
+    Identity is taken ONLY from the signed token — never from a client-supplied id —
+    so a request cannot impersonate another customer.
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    return verify_token(authorization[7:].strip())
+
+
+def _build_deps(req: ChatRequest, auth_user_id: int | None):
+    """Identity + page context for a chat request. Returns (deps, user_row|None).
+
+    Identity comes from the verified token (auth_user_id), not from the request body.
+    """
     deps = ChatDeps()
-    row = get_user_by_id(req.user_id) if req.user_id is not None else None
+    row = get_user_by_id(auth_user_id) if auth_user_id is not None else None
     if row is not None:
         deps.user_id = row["id"]
         deps.first_name = row["first_name"]
@@ -180,13 +196,13 @@ def _is_blocked(exc: Exception) -> bool:
 
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest) -> ChatResponse:
+async def chat(req: ChatRequest, authorization: str | None = Header(default=None)) -> ChatResponse:
     """One shopper turn -> agent reply plus the products it chose to show (non-streaming).
 
     The agent returns product_ids; we re-hydrate them from the database so price,
     stock, and images on the page are the real values, not the model's memory.
     """
-    deps, row = _build_deps(req)
+    deps, row = _build_deps(req, _authed_user_id(authorization))
     try:
         result = await run_chat(message=req.message, deps=deps, history=req.history)
     except Exception as exc:  # noqa: BLE001
@@ -201,14 +217,14 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
 
 @app.post("/api/chat/stream")
-async def chat_stream(req: ChatRequest) -> StreamingResponse:
+async def chat_stream(req: ChatRequest, authorization: str | None = Header(default=None)) -> StreamingResponse:
     """Streaming version of /api/chat (Server-Sent Events).
 
     Emits `{"type":"delta","text":...}` as the reply is written, then one
     `{"type":"final","reply":...,"products":[...]}` with the hydrated product cards.
     The product cards are still filled from the DB, never the model's memory.
     """
-    deps, row = _build_deps(req)
+    deps, row = _build_deps(req, _authed_user_id(authorization))
 
     async def event_stream():
         final_reply = ""
@@ -249,8 +265,13 @@ async def chat_stream(req: ChatRequest) -> StreamingResponse:
 
 
 @app.get("/api/chat/history")
-def chat_history(user_id: int) -> dict:
-    """Reload a logged-in shopper's saved chat turns when they return."""
-    if get_user_by_id(user_id) is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"history": get_chat_history(user_id)}
+def chat_history(authorization: str | None = Header(default=None)) -> dict:
+    """Reload the authenticated shopper's own saved chat turns.
+
+    The user is taken from the verified token only — you can only ever read your own
+    history, never another customer's by passing their id.
+    """
+    auth_user_id = _authed_user_id(authorization)
+    if auth_user_id is None or get_user_by_id(auth_user_id) is None:
+        raise HTTPException(status_code=401, detail="Sign in to view your chat history.")
+    return {"history": get_chat_history(auth_user_id)}

@@ -68,5 +68,11 @@ export interface HistoryTurn {
   created_at: string
 }
 
-export const fetchChatHistory = (userId: number) =>
-  getJSON<{ history: HistoryTurn[] }>(`/api/chat/history?user_id=${userId}`)
+// History is scoped to the caller's own token — the server ignores any id in the URL.
+export async function fetchChatHistory(token: string): Promise<{ history: HistoryTurn[] }> {
+  const res = await fetch('/api/chat/history', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  return res.json() as Promise<{ history: HistoryTurn[] }>
+}

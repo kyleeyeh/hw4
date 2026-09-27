@@ -10,6 +10,7 @@ export interface User {
 
 interface AuthContextValue {
   user: User | null
+  token: string | null
   login: (email: string, password: string) => Promise<void>
   signup: (
     first_name: string,
@@ -22,8 +23,9 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 const STORAGE_KEY = 'cc_user'
+const TOKEN_KEY = 'cc_token'
 
-async function postJSON(url: string, body: unknown): Promise<{ user: User }> {
+async function postJSON(url: string, body: unknown): Promise<{ user: User; token: string }> {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -43,26 +45,32 @@ async function postJSON(url: string, body: unknown): Promise<{ user: User }> {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
+    const savedToken = localStorage.getItem(TOKEN_KEY)
+    if (saved && savedToken) {
       try {
         setUser(JSON.parse(saved))
+        setToken(savedToken)
       } catch {
         localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(TOKEN_KEY)
       }
     }
   }, [])
 
-  function persist(u: User) {
+  function persist(u: User, t: string) {
     setUser(u)
+    setToken(t)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u))
+    localStorage.setItem(TOKEN_KEY, t)
   }
 
   async function login(email: string, password: string) {
-    const { user } = await postJSON('/api/login', { email, password })
-    persist(user)
+    const { user, token } = await postJSON('/api/login', { email, password })
+    persist(user, token)
   }
 
   async function signup(
@@ -71,18 +79,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ) {
-    await postJSON('/api/signup', { first_name, last_name, email, password })
-    // Auto-login straight after a successful signup.
-    await login(email, password)
+    const { user, token } = await postJSON('/api/signup', { first_name, last_name, email, password })
+    persist(user, token)
   }
 
   function logout() {
     setUser(null)
+    setToken(null)
     localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(TOKEN_KEY)
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, token, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   )

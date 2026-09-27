@@ -137,8 +137,8 @@ pbkdf2_sha256$<iterations>$<salt_hex>$<hash_hex>
 ### Endpoints
 | Route | Body | Behavior |
 |---|---|---|
-| `POST /api/signup` | first_name, last_name, email, password (≥8) | Hashes password, inserts user, returns the public user. `409` on duplicate email, `422` on bad input. |
-| `POST /api/login` | email, password | Verifies the hash; returns the public user or `401`. **Same error for unknown email and wrong password**, so attackers can't enumerate which emails are registered. |
+| `POST /api/signup` | first_name, last_name, email, password (≥8) | Hashes password, inserts user, returns the public user **and a signed session token**. `409` on duplicate email, `422` on bad input. |
+| `POST /api/login` | email, password | Verifies the hash; returns the public user **and a signed session token**, or `401`. **Same error for unknown email and wrong password**, so attackers can't enumerate which emails are registered. |
 
 Confirm-password is checked client-side (`CreateAccount.tsx`); on success the client
 auto-logs-in and stores the returned user in `localStorage` (`frontend/src/auth.tsx`).
@@ -166,12 +166,13 @@ they can't be logged into by anyone regardless.
 The chat widget (`frontend/src/components/ChatWidget.tsx`) POSTs to **`/api/chat`** with:
 
 ```json
-{ "message": "...", "user_id": 1 | null, "history": [{"role","content"}, ...] }
+{ "message": "...", "history": [{"role","content"}, ...], "page_product_id": "..." | null }
 ```
 
-`user_id` comes from the logged-in user in the auth context (null if signed out); `history`
-is the running conversation the widget already holds. In dev, Vite proxies `/api` and
-`/media` to the backend on `:8000`, so the browser uses same-origin relative paths.
+with an `Authorization: Bearer <token>` header when the shopper is logged in. Identity is
+taken from that verified token, **not** from the body (so it can't be spoofed); `history` is
+the running conversation the widget already holds. In dev, Vite proxies `/api` and `/media`
+to the backend on `:8000`, so the browser uses same-origin relative paths.
 
 The backend returns:
 
@@ -200,8 +201,8 @@ base_url=PORTKEY_BASE_URL))`. Config comes from `backend/.env` (gitignored; see
 `backend/.env.example`). The agent is `Agent(model, deps_type=ChatDeps,
 output_type=ChatReply, system_prompt=<prompt.md>, tools=[...])`, built once at import.
 
-**Request flow (`POST /api/chat`):** look up the user's first name from `user_id` →
-`run_chat(message, first_name, history)` → the agent calls tools as needed and returns a
+**Request flow (`POST /api/chat`):** verify the bearer token → load that user's row (name/email)
+→ `run_chat(message, deps, history)` → the agent calls tools as needed and returns a
 `ChatReply{reply, product_ids}` → the backend **re-hydrates each product_id from the DB**
 into a full `ProductCard` (so price/stock/image on the page are always the real values,
 never the model's memory) → for logged-in shoppers the turn is saved to `chat_messages`
@@ -340,18 +341,22 @@ Logged-in shoppers' turns are saved to the existing **`chat_messages`** table (o
 turn): `user_id`, `role` ("user"/"assistant"), `content`, `products_json` (the cards shown
 with an assistant reply, so they re-render on reload), `created_at`. Writing happens at the
 end of `POST /api/chat` in `main.py` via `db.save_chat_message` — **only when a real user is
-resolved from `user_id`**. Guests (no `user_id`) chat normally but nothing is persisted.
+resolved from the verified token**. Guests (no token) chat normally but nothing is persisted.
 
-**Reload on return:** `GET /api/chat/history?user_id=<id>` → `db.get_chat_history` returns
-the shopper's turns oldest-first (with `products_json` parsed back into product lists). The
-`ChatWidget` calls this whenever the logged-in user changes and repopulates the panel, so a
+**Reload on return:** `GET /api/chat/history` (with the `Authorization: Bearer` token) →
+`db.get_chat_history` returns the **token owner's** turns oldest-first (with `products_json`
+parsed back into product lists); the id is never taken from the URL, so you can only read your
+own history. The `ChatWidget` calls this whenever the logged-in user changes and repopulates
+the panel, so a
 returning shopper sees their past conversation and the cards that went with it. On logout the
 panel resets to a clean greeting. (History for the agent's own context is a recent window of
 the last 16 turns, sent with each request; the full history is for display.)
 
 ### What customer fields the agent sees
-Identity is carried in **agent deps** (`ChatDeps` in `agent.py`), populated by `main.py` from
-the `users` row for the request's `user_id`:
+Identity is **server-verified**: login/signup issue an HMAC-signed session token, and the chat
+routes derive the user id **only** from that token (sent as `Authorization: Bearer <token>`) —
+never from a client-supplied id, so no one can impersonate or read another customer. The verified
+id loads the `users` row into **agent deps** (`ChatDeps` in `agent.py`):
 
 | Dep field | Source | Why the agent needs it |
 |---|---|---|
@@ -477,7 +482,7 @@ All in `backend/models.py`. Two layers: what the agent/tools pass around, and th
 | `ProductInfo` | product_id, name, garment_type, description, colors, price, inventory, available_sizes, total_stock, found | The **authoritative single-product lookup** — full description + price + per-size stock, so the agent answers "what is it / how much / do you have my size" from real data. `found=False` ⇒ the id doesn't exist (so the agent won't invent one). |
 | `ChatReply` | reply, product_ids | The agent's structured output. `product_ids` (not full products) keeps the model honest — the backend re-hydrates them from the DB, so displayed price/stock/image are always real. |
 | `ChatTurn` | role, content | One prior message, for replaying history as context. |
-| `ChatRequest` | message, user_id, history, page_product_id | Everything a turn needs: who's asking, recent context, and the product being viewed (so "this" resolves). |
+| `ChatRequest` | message, history, page_product_id | A turn's inputs: the message, recent context, and the product being viewed (so "this" resolves). Identity is NOT here — it comes from the signed bearer token. |
 | `ChatResponse` | reply, products | What the widget renders — text + hydrated cards. |
 | `SignupRequest` / `LoginRequest` | first/last/email/password · email/password | Validated auth input (email format, password length). |
 

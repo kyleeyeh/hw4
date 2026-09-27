@@ -273,5 +273,71 @@
     "args": "",
     "result": "ModelHTTPError: status_code: 400, model_name: gpt-5.6-terra, body: {'message': \"azure-openai error: The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', '…",
     "stop_reason": "error"
+  },
+  {
+    "time": "2026-09-27T18:01:54.001146+00:00",
+    "run_id": "3d40915312c2",
+    "step": 1,
+    "mode": "chat",
+    "subject": "do you know my name?",
+    "tool": "search_products",
+    "args": "{\"query\":\"Yale\",\"in_stock_only\":true}",
+    "result": "[\"product_id='2025-yale-vs-harvard-t-shirt' name='2025 Yale Vs Harvard T Shirt' garment_type='T-Shirt' price=32.0 colors=['heather gray', 'white', 'red', 'navy blue'] short_description='Heather gray short-sleeve T-shirt featuring a 2025 Harvard-Yale The Game graphic, with red Harvard and navy\\u2026' total_stock=112 available_sizes=['XS', 'S', 'M', 'L', 'XL', 'XXL']\", \"product_id='big-yale-tri-blen…",
+    "stop_reason": "tool_call"
+  },
+  {
+    "time": "2026-09-27T18:01:54.001730+00:00",
+    "run_id": "3d40915312c2",
+    "step": 2,
+    "mode": "chat",
+    "subject": "do you know my name?",
+    "tool": null,
+    "args": "{\"reply\":\"You’re Test User. 🐾 What Yale gear can I help you sniff out today?\",\"product_ids\":[]}",
+    "result": "{\"reply\":\"You’re Test User. 🐾 What Yale gear can I help you sniff out today?\",\"product_ids\":[]}",
+    "stop_reason": "final_output"
+  },
+  {
+    "time": "2026-09-27T18:02:10.756183+00:00",
+    "run_id": "a8caaf32cbc2",
+    "step": 1,
+    "mode": "chat",
+    "subject": "do you know my name?",
+    "tool": "search_products",
+    "args": "{\"query\":\"Yale\",\"in_stock_only\":true}",
+    "result": "[\"product_id='2025-yale-vs-harvard-t-shirt' name='2025 Yale Vs Harvard T Shirt' garment_type='T-Shirt' price=32.0 colors=['heather gray', 'white', 'red', 'navy blue'] short_description='Heather gray short-sleeve T-shirt featuring a 2025 Harvard-Yale The Game graphic, with red Harvard and navy\\u2026' total_stock=112 available_sizes=['XS', 'S', 'M', 'L', 'XL', 'XXL']\", \"product_id='big-yale-tri-blen…",
+    "stop_reason": "tool_call"
+  },
+  {
+    "time": "2026-09-27T18:02:10.756473+00:00",
+    "run_id": "a8caaf32cbc2",
+    "step": 2,
+    "mode": "chat",
+    "subject": "do you know my name?",
+    "tool": null,
+    "args": "{\"reply\":\"You’re Test User. 🐾 What Yale gear can I help you sniff out today?\",\"product_ids\":[]}",
+    "result": "{\"reply\":\"You’re Test User. 🐾 What Yale gear can I help you sniff out today?\",\"product_ids\":[]}",
+    "stop_reason": "final_output"
+  },
+  {
+    "time": "2026-09-27T18:02:20.103501+00:00",
+    "run_id": "0f926e8e5617",
+    "step": 1,
+    "mode": "chat",
+    "subject": "do you know my name?",
+    "tool": "search_products",
+    "args": "{\"query\":\"\",\"in_stock_only\":true}",
+    "result": "[\"product_id='2025-yale-vs-harvard-t-shirt' name='2025 Yale Vs Harvard T Shirt' garment_type='T-Shirt' price=32.0 colors=['heather gray', 'white', 'red', 'navy blue'] short_description='Heather gray short-sleeve T-shirt featuring a 2025 Harvard-Yale The Game graphic, with red Harvard and navy\\u2026' total_stock=112 available_sizes=['XS', 'S', 'M', 'L', 'XL', 'XXL']\", \"product_id='benjamin-franklin…",
+    "stop_reason": "tool_call"
+  },
+  {
+    "time": "2026-09-27T18:02:20.103842+00:00",
+    "run_id": "0f926e8e5617",
+    "step": 2,
+    "mode": "chat",
+    "subject": "do you know my name?",
+    "tool": null,
+    "args": "{\"reply\":\"I don’t know your name—you’re browsing as a guest, so I only know what you choose to share. Woof! How can I help you find some Yale gear?\",\"product_ids\":[]}",
+    "result": "{\"reply\":\"I don’t know your name—you’re browsing as a guest, so I only know what you choose to share. Woof! How can I help you find some Yale gear?\",\"product_ids\":[]}",
+    "stop_reason": "final_output"
   }
 ]

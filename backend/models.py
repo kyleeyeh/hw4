@@ -90,11 +90,13 @@ class ChatTurn(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
-    user_id: int | None = None
     history: list[ChatTurn] = Field(default_factory=list)
     # Page context: the product_id the shopper is currently viewing, if any, so
     # "do you have this in pink?" resolves to the right item.
     page_product_id: str | None = None
+    # NOTE: identity is NOT taken from the request body — it comes only from the signed
+    # Authorization bearer token (see main._authed_user_id), so a client can't impersonate
+    # another customer by supplying their user id.
 
 
 class ChatResponse(BaseModel):
