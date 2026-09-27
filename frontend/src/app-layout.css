@@ -1,0 +1,29 @@
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.app-main { flex: 1; }
+
+.app-footer {
+  background: var(--navy-deep);
+  color: #c7d2e0;
+  font-size: 13px;
+  padding: 22px 0;
+  margin-top: 64px;
+}
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-inner { align-items: center; }
+.footer-left { display: flex; align-items: center; }
+.footer-right { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+
+.yale-seal { display: flex; align-items: center; gap: 12px; }
+.yale-seal-text { display: flex; flex-direction: column; line-height: 1.2; }
+.yale-seal-text strong { font-family: var(--font-display); font-size: 18px; color: #fff; }
+.yale-seal-text span { font-size: 11px; color: #9fb3cc; }
+
+@media (max-width: 620px) {
+  .footer-right { text-align: left; }
+}

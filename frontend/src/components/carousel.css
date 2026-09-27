@@ -1,0 +1,38 @@
+.carousel {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-deep) 100%);
+  color: #fff; overflow: hidden;
+}
+.carousel-inner {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
+  min-height: 460px; padding: 40px 24px;
+}
+.carousel-eyebrow {
+  text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700;
+  color: var(--gold); font-family: var(--font-display);
+}
+.carousel-copy h1 {
+  font-size: 44px; color: #fff; margin: 14px 0 6px; letter-spacing: -1px;
+  animation: fade-up 0.4s ease;
+}
+.carousel-type { color: #b9c9dd; margin: 0 0 14px; font-weight: 600; }
+.carousel-desc { color: #d3ddea; font-size: 17px; line-height: 1.5; max-width: 460px; margin: 0 0 24px; min-height: 52px; }
+.carousel-cta { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.carousel-price { font-family: var(--font-display); font-size: 26px; font-weight: 700; }
+.carousel-dots { display: flex; gap: 8px; margin-top: 26px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; border: none; background: rgba(255,255,255,0.35); padding: 0; }
+.dot.active { background: var(--gold); width: 26px; border-radius: 6px; }
+
+.carousel-image {
+  aspect-ratio: 1; max-height: 400px; border-radius: 16px; overflow: hidden;
+  background: rgba(255,255,255,0.06); justify-self: center; width: 100%;
+}
+.carousel-image img { width: 100%; height: 100%; object-fit: cover; display: block; animation: fade-in 0.5s ease; }
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 820px) {
+  .carousel-inner { grid-template-columns: 1fr; min-height: 0; gap: 24px; }
+  .carousel-copy h1 { font-size: 32px; }
+  .carousel-image { max-height: 300px; order: -1; }
+}

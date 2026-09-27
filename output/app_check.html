@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Campus Customs — App Check</title>
+<style>
+  :root {
+    --navy: #00356b; --gold: #b58a3c; --ink: #241d15; --muted: #6b6152;
+    --bg: #f5eede; --paper: #fffdf7; --line: #e6ddcb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif; line-height: 1.6;
+  }
+  header {
+    background: linear-gradient(135deg, var(--navy), #001325);
+    color: #fff; padding: 40px 24px; border-bottom: 4px solid var(--gold);
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  header h1 { margin: 0 0 6px; font-size: 32px; }
+  header p { margin: 0; color: #cdb98a; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: 12px;
+    font-family: Arial, sans-serif; color: var(--gold); font-weight: 700; }
+  section { padding: 36px 0; border-bottom: 1px solid var(--line); }
+  h2 { font-size: 24px; margin: 0 0 4px; }
+  .tag { font-family: Arial, sans-serif; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--navy);
+    background: #e9e0cd; display: inline-block; padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
+  figure { margin: 16px 0 0; }
+  img { max-width: 100%; height: auto; border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 8px 26px rgba(36,29,21,0.16); background: #fff; }
+  figcaption { margin-top: 12px; color: var(--ink); font-size: 16px; }
+  .proves { font-family: Arial, sans-serif; font-size: 14px; color: var(--muted); margin-top: 6px; }
+  footer { padding: 28px 24px; color: var(--muted); font-family: Arial, sans-serif; font-size: 13px; }
+  code { background: #ece3d0; padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Campus Customs · Site Test</p>
+    <h1>App Check — Live Site Verification</h1>
+    <p>Three checks captured from the running site (frontend :5173 → FastAPI :8000 → agent → SQLite).</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <span class="tag">Check 1 · Honest inventory &amp; price</span>
+    <h2>Chat checks stock and price from the database</h2>
+    <figure>
+      <img src="app_check_images/inventory.png" alt="Chat reply giving price and XL stock for the Basic Hoodie Big Yale" />
+      <figcaption>
+        Handsome Dan is asked the price and XL availability of the <em>Basic Hoodie Big Yale</em>.
+        He replies: <strong>&ldquo;$68. Size XL is in stock&mdash;2 available.&rdquo;</strong>
+        <div class="proves">Proves the agent reads live data: the <code>inventory</code> table holds exactly 2 XL units of
+        this product at $68 — the numbers are looked up, not invented, and a sold-out size would be stated plainly.</div>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <span class="tag">Check 2 · Chat search updates the page</span>
+    <h2>Category question renders product cards on the site</h2>
+    <figure>
+      <img src="app_check_images/search_cards.png" alt="Hoodie product cards on the page after asking the chat what hoodies are available" />
+      <figcaption>
+        After asking <em>&ldquo;What hoodies do you have?&rdquo;</em>, the matching hoodies appear as
+        product cards directly on the page (and in the chat panel), each linking to its detail view.
+        <div class="proves">Proves the API contract: the agent returns structured product matches, the backend
+        re-hydrates them from the DB (name, price, image), and the front end renders them as clickable cards.</div>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <span class="tag">Check 3 · Usability feature (Problem 9)</span>
+    <h2>Auto-scrolling featured carousel on the home page</h2>
+    <figure>
+      <img src="app_check_images/usability_carousel.png" alt="Home page featured carousel spotlighting the 2025 Yale vs Harvard tee" />
+      <figcaption>
+        The home page opens on an auto-scrolling featured carousel spotlighting a curated item
+        (here the <em>2025 Yale Vs Harvard T&nbsp;Shirt</em>, $32) with a <em>Shop this</em> button.
+        <div class="proves">Proves the Problem&nbsp;9 usability improvement: real product is shown the instant the page loads,
+        and the row of dots (first one active) shows it rotates through several featured items every few seconds.</div>
+      </figcaption>
+    </figure>
+  </section>
+
+</div>
+
+<footer class="wrap">
+  Screenshots captured from the live site with a headless Chromium against
+  <code>http://localhost:5173</code>. Images are in <code>app_check_images/</code>.
+</footer>
+</body>
+</html>

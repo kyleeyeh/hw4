@@ -1,0 +1,33 @@
+.chat-picks {
+  background: linear-gradient(180deg, #eef3fa 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 28px 0 32px;
+  animation: picks-in 0.25s ease;
+}
+@keyframes picks-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.picks-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 16px; margin-bottom: 18px;
+}
+.picks-eyebrow {
+  text-transform: uppercase; letter-spacing: 1.5px;
+  font-size: 11px; font-weight: 700; color: var(--gold);
+  font-family: var(--font-display);
+}
+.picks-head h2 { margin: 4px 0 0; font-size: 22px; }
+.picks-clear {
+  background: var(--paper);
+  border: 1px solid var(--gray-200);
+  color: var(--gray-600);
+  padding: 7px 14px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.picks-clear:hover { border-color: var(--navy); color: var(--navy); }
+.picks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 18px;
+}
